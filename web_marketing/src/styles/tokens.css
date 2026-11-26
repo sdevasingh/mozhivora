@@ -1,0 +1,88 @@
+/* MOZHIVORA Jomor × T.RICKS Glassmorphism Design Tokens */
+:root {
+  --bg-obsidian: #111114;
+  --surface-glass: rgba(255, 255, 255, 0.045);
+  --border-glass: rgba(255, 255, 255, 0.14);
+  --color-ink-teal: #2EB5A8;
+  --color-saffron: #FF6A3B;
+  --color-spark: #D4FF4E;
+  --color-text: #F4F1E9;
+  --color-muted: #A49E96;
+
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --max-width: 1180px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text);
+  background-color: var(--bg-obsidian);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 82% 14%, rgba(46, 181, 168, 0.25), transparent 42%),
+    radial-gradient(circle at 12% 78%, rgba(255, 106, 59, 0.16), transparent 45%),
+    var(--bg-obsidian);
+}
+
+a { color: inherit; text-decoration: none; }
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.glass-panel {
+  background: var(--surface-glass);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+}
+
+.stroke-title {
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.85);
+  color: transparent;
+}
+
+.split-cta {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.split-cta span:first-child {
+  padding: 14px 22px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.split-cta span:last-child {
+  padding: 14px 18px;
+  background: #FFFFFF;
+  color: #111114;
+  transition: background 180ms ease;
+}
+
+.split-cta:hover span:last-child {
+  background: var(--color-saffron);
+  color: #FFFFFF;
+}

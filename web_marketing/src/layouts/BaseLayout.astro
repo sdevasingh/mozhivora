@@ -1,0 +1,61 @@
+---
+import '../styles/tokens.css';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+}
+
+const { title, description, canonicalPath = '/' } = Astro.props;
+const canonicalURL = new URL(canonicalPath, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header style="padding: 24px 0;">
+      <nav class="container" aria-label="Primary" style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+        <a href="/" style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; letter-spacing: 0.1em;">
+          <span style="color: var(--color-spark);">✦</span> MOZHIVORA
+        </a>
+        <div style="display:flex; align-items:center; gap:28px; font-family:var(--font-mono); font-size:0.8rem; letter-spacing:0.08em; color:var(--color-muted);">
+          <a href="/tools/">TOOLS</a>
+          <a href="/#compare">COMPARE</a>
+          <a href="/#pricing">PRICING</a>
+          <a href="/privacy/">PRIVACY</a>
+          <a href="/#pricing" style="width:42px; height:42px; border-radius:50%; background:#FFFFFF; color:#111114; display:inline-flex; align-items:center; justify-content:center; font-weight:800;">=</a>
+        </div>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer style="border-top: 1px solid var(--border-glass); padding: 40px 0; margin-top: 80px; color: var(--color-muted); font-family: var(--font-mono); font-size: 0.8rem;">
+      <div class="container" style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px;">
+        <div>✦ MOZHIVORA — ZERO TRAINING ON YOUR FILES · GDPR &amp; DPDP 2023</div>
+        <div style="display:flex; gap:24px;">
+          <a href="/privacy/">PRIVACY</a>
+          <a href="/tools/">TOOLS</a>
+          <a href="/#pricing">PRICING</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

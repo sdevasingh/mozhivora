@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="MOZHIVORA — One workspace. Every task. Smarter with AI."
+  description="The AI workspace that remembers your work, speaks 11+ Indian & world languages, and costs less than a coffee."
+  canonicalPath="/"
+>
+  <!-- Jomor × T.RICKS Hero -->
+  <section class="container" style="padding: 48px 24px 72px;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 48px; align-items: center;">
+      <div>
+        <h1 style="font-family: var(--font-display); font-size: clamp(2.8rem, 6vw, 4.6rem); line-height: 0.98; margin: 0 0 24px; letter-spacing: -0.03em; text-transform: uppercase;">
+          <span style="color: var(--color-spark);">✦</span> <span class="stroke-title">ONE</span><br />
+          WORKSPACE<br />
+          <span style="color: var(--color-ink-teal);">SMARTER AI</span>
+        </h1>
+        <p style="font-size: 1.05rem; color: var(--color-muted); max-width: 460px; margin: 0 0 32px;">
+          Write, chat with PDFs, study with SM-2 flashcards, translate 11 Indian &amp; world languages, and plan your day — in one glassmorphic studio.
+        </p>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:24px;">
+          <a href="#pricing" class="split-cta">
+            <span>START FREE // 15 DAILY</span>
+            <span>→</span>
+          </a>
+          <a href="/tools/" style="width:92px; height:92px; border-radius:50%; border:1.5px solid var(--color-ink-teal); display:inline-flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; letter-spacing:0.12em; text-align:center; transform:rotate(-10deg);">
+            EXPLORE<br />TOOLS
+          </a>
+        </div>
+      </div>
+
+      <!-- Tilted Floating Glassmorphic Card (T.RICKS style) -->
+      <div style="position:relative; display:flex; align-items:center; justify-content:center; min-height:320px;">
+        <div class="glass-panel" style="width:100%; max-width:420px; padding:28px; transform:rotate(-4deg); background:linear-gradient(135deg, rgba(46,181,168,0.35), rgba(255,106,59,0.22)); border-color:rgba(255,255,255,0.28); box-shadow: 0 24px 60px rgba(46,181,168,0.2);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:44px;">
+            <span style="font-family:var(--font-mono); font-size:0.78rem; letter-spacing:0.15em;">MOZHIVORA PASS</span>
+            <span style="color:var(--color-spark); font-size:1.4rem;">✦</span>
+          </div>
+          <div id="preview-greeting" style="font-family:var(--font-display); font-size:2rem; font-weight:800; margin-bottom:6px;">Good evening</div>
+          <div id="preview-sub" style="font-family:var(--font-mono); font-size:0.8rem; color:rgba(255,255,255,0.8); margin-bottom:24px;">Est. 1 credit · First token &lt; 1.5s</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;" id="lang-pills">
+            <button type="button" data-lang="en" style="background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.25); padding:5px 10px; border-radius:4px; cursor:pointer; font-family:var(--font-mono); font-size:0.75rem;">EN</button>
+            <button type="button" data-lang="hi" style="background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.25); padding:5px 10px; border-radius:4px; cursor:pointer; font-family:var(--font-mono); font-size:0.75rem;">हिन्दी</button>
+            <button type="button" data-lang="ta" style="background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.25); padding:5px 10px; border-radius:4px; cursor:pointer; font-family:var(--font-mono); font-size:0.75rem;">தமிழ்</button>
+            <button type="button" data-lang="ur" style="background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.25); padding:5px 10px; border-radius:4px; cursor:pointer; font-family:var(--font-mono); font-size:0.75rem;">اردو RTL</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Watermarked Tools Grid -->
+  <section id="features" class="container" style="padding: 48px 24px;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+      {[
+        ['01', 'Ask Mozhivora', 'Fast streaming AI chat with deep reasoning and one-tap branching.'],
+        ['02', 'AI Writer & Brand Voice', 'Draft reports, blogs, and scripts matching 3–5 writing samples.'],
+        ['03', 'Document Chat', 'Ask across folders of PDFs with clickable page-level citations.'],
+        ['04', 'Notes & SM-2 Study', 'Turn lectures or PDFs into structured notes, quizzes, and flashcards.'],
+        ['05', 'Translator', '11 Indian & world languages with Hinglish and RTL for Urdu/Arabic.'],
+        ['06', 'Voice & Task Planner', 'Convert meeting transcripts into decisions and offline-first tasks.'],
+      ].map(([num, title, desc]) => (
+        <article class="glass-panel" style="padding: 28px; position:relative; overflow:hidden;">
+          <div class="stroke-title" style="position:absolute; right:14px; bottom:-12px; font-family:var(--font-display); font-size:4.5rem; font-weight:800; opacity:0.25;">{num}</div>
+          <h3 style="margin: 0 0 8px; font-family: var(--font-display); font-size: 1.25rem;">{title}</h3>
+          <p style="margin: 0; color: var(--color-muted); font-size: 0.92rem; position:relative;">{desc}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="container" style="padding: 48px 24px;">
+    <h2 style="font-family: var(--font-display); font-size: 2.2rem; margin: 0 0 24px;">TRANSPARENT PRICING</h2>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+      <div class="glass-panel" style="padding: 24px;">
+        <h3 style="margin:0 0 8px;">Free</h3>
+        <p style="font-size:1.85rem; font-weight:800; margin:0 0 12px;">₹0 <span style="font-size:0.9rem; color:var(--color-muted);">/ $0</span></p>
+        <p style="color:var(--color-muted); font-size:0.9rem;">15 AI requests/day, Writer, Email, Notes, Translator, 20 saved items.</p>
+      </div>
+      <div class="glass-panel" style="padding: 24px; border-color: var(--color-ink-teal);">
+        <h3 style="margin:0 0 8px; color:var(--color-ink-teal);">Student</h3>
+        <p style="font-size:1.85rem; font-weight:800; margin:0 0 12px;">₹99/mo <span style="font-size:0.9rem; color:var(--color-muted);">/ $1.99</span></p>
+        <p style="color:var(--color-muted); font-size:0.9rem;">Verified student status, study tools, SM-2 flashcards, quizzes, 200 credits/mo.</p>
+      </div>
+      <div class="glass-panel" style="padding: 24px; border-color: var(--color-saffron);">
+        <h3 style="margin:0 0 8px; color:var(--color-saffron);">Pro</h3>
+        <p style="font-size:1.85rem; font-weight:800; margin:0 0 12px;">₹199/mo <span style="font-size:0.9rem; color:var(--color-muted);">/ $3.99</span></p>
+        <p style="color:var(--color-muted); font-size:0.9rem;">500 credits/mo, Document Chat, Voice &amp; OCR, Brand Voice, unlimited saves.</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const previews = {
+      en: { dir: 'ltr', greeting: 'Good evening', sub: 'Est. 1 credit · First token < 1.5s' },
+      hi: { dir: 'ltr', greeting: 'शुभ संध्या', sub: 'अनुमानित 1 क्रेडिट · < 1.5s' },
+      ta: { dir: 'ltr', greeting: 'மாலை வணக்கம்', sub: 'Est. 1 credit · < 1.5s' },
+      ur: { dir: 'rtl', greeting: 'شام بخیر', sub: 'تخمینی 1 کریڈٹ · < 1.5s' },
+    };
+    document.querySelectorAll('#lang-pills button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const data = previews[btn.dataset.lang];
+        const g = document.getElementById('preview-greeting');
+        const s = document.getElementById('preview-sub');
+        g.setAttribute('dir', data.dir);
+        s.setAttribute('dir', data.dir);
+        g.textContent = data.greeting;
+        s.textContent = data.sub;
+      });
+    });
+  </script>
+</BaseLayout>

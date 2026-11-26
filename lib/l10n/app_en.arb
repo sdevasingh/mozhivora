@@ -1,0 +1,186 @@
+{
+  "@@locale": "en",
+  "appTitle": "MOZHIVORA",
+  "tagline": "One workspace. Every task. Smarter with AI.",
+  "navHome": "Home",
+  "navAsk": "Ask",
+  "navWriter": "Writer",
+  "navDocs": "PDF & Docs",
+  "navDocumentChat": "Document Chat",
+  "navEmail": "Email",
+  "navNotes": "Notes & Study",
+  "navTranslator": "Translator",
+  "navVoice": "Voice & Meetings",
+  "navTasks": "Task Planner",
+  "navTemplates": "Templates",
+  "navWorkspace": "Workspace",
+  "navSettings": "Settings",
+  "navPricing": "Pricing",
+  "navTools": "Tools",
+  "navProfile": "Profile",
+  "commandBarHint": "Ask anything, open a tool, or search files...",
+  "commandBarShortcut": "Ctrl+K",
+  "commandBarEmpty": "Type a tool name or question to jump right in.",
+  "onboardingStepOf": "Step {current} of {total}",
+  "@onboardingStepOf": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "onboardingRoleTitle": "How will you use MOZHIVORA?",
+  "onboardingRoleSubtitle": "We'll tailor your home screen and templates.",
+  "roleStudent": "Student",
+  "roleStudentDesc": "Summaries, flashcards, quizzes, and exam planning",
+  "roleProfessional": "Professional",
+  "roleProfessionalDesc": "Reports, emails, meeting notes, and document chat",
+  "roleCreator": "Creator",
+  "roleCreatorDesc": "Consistent brand voice, scripts, and social posts",
+  "roleBusiness": "Business owner",
+  "roleBusinessDesc": "Proposals, customer replies, and multilingual outreach",
+  "onboardingLangTitle": "Choose your primary language",
+  "onboardingLangSubtitle": "You can switch languages or use Hinglish anytime.",
+  "onboardingToolsTitle": "Pick your top 3 tools",
+  "onboardingToolsSubtitle": "Selected: {count} of 3",
+  "@onboardingToolsSubtitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "actionNext": "Continue",
+  "actionBack": "Back",
+  "actionFinish": "Open Workspace",
+  "actionSkip": "Skip",
+  "greetingMorning": "Good morning",
+  "greetingAfternoon": "Good afternoon",
+  "greetingEvening": "Good evening",
+  "modeStudent": "Student Mode",
+  "modePro": "Pro Mode",
+  "switchMode": "Switch mode",
+  "creditsRemaining": "{count, plural, =0{0 credits left} =1{1 credit left} other{{count} credits left}}",
+  "@creditsRemaining": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "creditsResetOn": "Resets on {date}",
+  "@creditsResetOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "quickActions": "Quick actions",
+  "continueWork": "Continue where you left off",
+  "todaysTasks": "Today's tasks",
+  "noTasksToday": "No tasks due today. Plan your day or extract tasks from notes.",
+  "suggestedTemplates": "Suggested for you",
+  "timeSavedTitle": "Weekly time saved",
+  "timeSavedLocked": "Complete {remaining} more AI generations to unlock real time-saved stats.",
+  "@timeSavedLocked": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "upgradeCardTitle": "Unlock Document Chat, Voice & Brand Voice",
+  "upgradeCardSubtitle": "Student from ₹99/mo · Pro from ₹199/mo. Cancel anytime.",
+  "upgradeAction": "View plans",
+  "dismiss": "Dismiss",
+  "privacyPromise": "Your files are never used to train AI models.",
+  "settingsAppearance": "Appearance",
+  "settingsThemeLight": "Paper (Light)",
+  "settingsThemeDark": "Charcoal (Warm Dark)",
+  "settingsLanguage": "Language & Script",
+  "settingsReducedMotion": "Reduce motion",
+  "settingsReducedMotionDesc": "Minimize animations across the workspace",
+  "settingsWorkspaceMode": "Workspace mode",
+  "settingsRerunOnboarding": "Run onboarding again",
+  "settingsPrivacyTitle": "Privacy & Data",
+  "settingsPrivacyBody": "GDPR & India DPDP Act 2023 compliant. Export or delete your data anytime.",
+  "toolPhaseReady": "Phase 1 shell ready. Full AI capabilities unlock in upcoming phases.",
+  "trySamplePrompt": "Try a sample prompt",
+  "emptyWorkspaceTitle": "Your workspace is ready",
+  "emptyWorkspaceDesc": "Start with Ask Mozhivora, write a draft, or pick a template.",
+  "authTitle": "Sign in to MOZHIVORA",
+  "authGuestCarryOver": "Guest mode: {remaining} demo generations carry over when you sign up.",
+  "@authGuestCarryOver": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
+  "authUnconfiguredNotice": "Supabase is not configured in this build. Pass SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define to enable live sign-in.",
+  "authSignIn": "Sign in",
+  "authSignUp": "Sign up",
+  "authPhoneOtp": "Phone OTP",
+  "authMagicLink": "Magic link",
+  "authFullName": "Full name",
+  "authEmail": "Email address",
+  "authPassword": "Password",
+  "authPhoneHint": "Phone number (with country code)",
+  "authOtpCode": "6-digit OTP",
+  "authSendMagicLink": "Send magic link",
+  "authSendOtp": "Send OTP",
+  "authVerifyOtp": "Verify OTP",
+  "authForgotPassword": "Forgot password?",
+  "authContinueGoogle": "Continue with Google",
+  "authAccountSection": "Account",
+  "authSignedOutStatus": "Using MOZHIVORA as a guest",
+  "authSignOut": "Sign out",
+  "authSignOutAll": "Sign out of all devices",
+  "workspaceMemoryTitle": "Workspace Memory",
+  "workspaceMemoryDesc": "Opt-in context about your role and writing style injected into AI generations.",
+  "workspaceMemoryWipe": "Wipe memory",
+  "workspaceMemoryWiped": "Workspace memory cleared.",
+  "creditEstimateLabel": "{count, plural, =1{Est. 1 credit} other{Est. {count} credits}}",
+  "@creditEstimateLabel": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "creditConfirmTitle": "Confirm credit use",
+  "creditConfirmBody": "This action will use an estimated {count} credits. Continue?",
+  "@creditConfirmBody": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "creditConfirmContinue": "Run action",
+  "actionCancel": "Cancel",
+  "actionSend": "Send",
+  "actionGenerate": "Generate",
+  "actionTranslate": "Translate",
+  "actionCopy": "Copy",
+  "copiedToClipboard": "Copied to clipboard",
+  "aiStreamingLabel": "Streaming response...",
+  "aiResultLabel": "Result",
+  "aiDepthMode": "Deep reasoning",
+  "askBranchChat": "Branch chat",
+  "askSubtitle": "Ask anything in English, Hindi, Urdu, or Hinglish.",
+  "writerTopicLabel": "What would you like to write about?",
+  "emailAbSubjects": "A/B subjects",
+  "emailContextLabel": "Describe the email or paste the thread to reply to",
+  "notesSourceLabel": "Paste chapter text, lecture notes, or topic",
+  "translatorSourceLabel": "Enter text to translate (auto-detects Hinglish & mixed scripts)",
+  "docsPickFile": "Pick PDF, DOCX, TXT, PPTX, or image",
+  "docsPasteHint": "Or paste document / OCR text here",
+  "docChatPassagesLabel": "Document passages (separate pages with ---)",
+  "docChatQuestionLabel": "Ask a grounded question about your document",
+  "tasksAddHint": "Add a task (works offline)",
+  "tasksAddButton": "Add",
+  "tasksPlanMyDay": "Plan my day with AI",
+  "voiceSpeakerLabels": "Speaker labels",
+  "voiceTranscriptHint": "Paste meeting transcript or notes",
+  "voiceToTasks": "Turn action items into tasks",
+  "workspaceExportBtn": "Export JSON",
+  "workspaceExported": "Workspace export copied to clipboard.",
+  "workspaceSearchHint": "Search workspace items...",
+  "workspaceTrashToggle": "30-day Trash",
+  "workspaceShareLink": "Copy read-only share link",
+  "pricingSelectPlan": "Choose {plan}",
+  "@pricingSelectPlan": {
+    "placeholders": {
+      "plan": { "type": "String" }
+    }
+  },
+  "referralTitle": "Invite friends, earn 50 credits each",
+  "referralSubtitle": "Share your code so both of you get 50 bonus credits."
+}

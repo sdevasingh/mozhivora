@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="AI Tools — MOZHIVORA"
+  description="Explore MOZHIVORA's 10 connected AI tools: Ask, Writer with Brand Voice, Grounded Document Chat, Translator (11+ Indian & world languages), Notes & Study, and Task Planner."
+  canonicalPath="/tools/"
+>
+  <section class="container" style="padding: 48px 24px;">
+    <h1 style="font-family: var(--font-serif); font-size: 2.5rem; color: var(--color-ink-teal);">One Workspace. 10 Connected AI Tools.</h1>
+    <p style="color: var(--color-stone); max-width: 680px; margin-bottom: 32px;">
+      Every tool shares your opt-in Workspace Memory, Brand Voice Kits, and transparent credit ledger.
+    </p>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+      {[
+        ['Ask Mozhivora', 'Fast SSE streaming chat (< 1.5s first token) with chat branching and deep reasoning mode.'],
+        ['AI Writer & Brand Voice', 'Draft articles, proposals, and social scripts matching 3-5 writing samples.'],
+        ['Document Chat (RAG)', 'Ask across PDFs with clickable page-level citations and strict Not Found grounding.'],
+        ['Notes & SM-2 Study', 'Turn chapters into structured notes, quizzes, and spaced-repetition flashcards.'],
+        ['Translator (40+ Languages)', 'Native Hindi, Urdu (RTL), Tamil, Telugu, Bengali, Marathi, and Hinglish support.'],
+        ['Voice & Task Planner', 'Convert meeting transcripts into decisions, open questions, and offline-first tasks.'],
+      ].map(([title, desc]) => (
+        <article style="background: var(--color-sand); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: 24px;">
+          <h2 style="margin: 0 0 8px; font-size: 1.2rem; color: var(--color-ink);">{title}</h2>
+          <p style="margin: 0; color: var(--color-stone); font-size: 0.95rem;">{desc}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
