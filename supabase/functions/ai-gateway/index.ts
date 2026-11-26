@@ -57,8 +57,10 @@ function checkRateLimit(key: string, maxPerMinute: number): number | null {
   return null;
 }
 
-function selectGeminiModel(quality: "fast" | "depth"): string {
-  return quality === "depth" ? "gemini-pro-latest" : "gemini-3.8-flash";
+function selectGeminiModels(quality: "fast" | "depth"): string[] {
+  return quality === "depth"
+    ? ["gemini-3.1-pro-preview", "gemini-pro-latest", "gemini-3-flash-preview"]
+    : ["gemini-3-flash-preview", "gemini-3.8-flash", "gemini-flash-latest"];
 }
 
 function violatesModeration(text: string): boolean {
@@ -142,7 +144,8 @@ Deno.serve(async (req: Request) => {
 
   const creditCost = Math.max(1, Math.min(10, Math.round(body.creditCost ?? 1)));
   const quality = body.quality === "depth" ? "depth" : "fast";
-  const model = selectGeminiModel(quality);
+  const candidateModels = selectGeminiModels(quality);
+  let model = candidateModels[0];
   const referenceId = crypto.randomUUID();
 
   // 4. Rate limit per user & IP
@@ -194,40 +197,34 @@ Deno.serve(async (req: Request) => {
     .filter(Boolean)
     .join("\n");
 
-  const geminiEndpoint =
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${geminiApiKey}`;
-
-  let geminiRes: Response;
-  try {
-    geminiRes = await fetch(geminiEndpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ role: "user", parts: [{ text: body.prompt }] }],
-      }),
-    });
-  } catch {
-    await adminClient.rpc("refund_credits", {
-      p_user_id: userId,
-      p_amount: creditCost,
-      p_reason: `refund:${body.tool}:network_error`,
-      p_reference_id: referenceId,
-    });
-    return new Response(
-      JSON.stringify({ error: "AI is busy, please try again." }),
-      {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
+  let geminiRes: Response | null = null;
+  for (const candidate of candidateModels) {
+    model = candidate;
+    const geminiEndpoint =
+      `https://generativelanguage.googleapis.com/v1beta/models/${candidate}:streamGenerateContent?alt=sse&key=${geminiApiKey}`;
+    try {
+      const res = await fetch(geminiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ role: "user", parts: [{ text: body.prompt }] }],
+        }),
+      });
+      if (res.ok && res.body) {
+        geminiRes = res;
+        break;
+      }
+    } catch {
+      // Try next fallback model
+    }
   }
 
-  if (!geminiRes.ok || !geminiRes.body) {
+  if (!geminiRes || !geminiRes.body) {
     await adminClient.rpc("refund_credits", {
       p_user_id: userId,
       p_amount: creditCost,
-      p_reason: `refund:${body.tool}:provider_${geminiRes.status}`,
+      p_reason: `refund:${body.tool}:provider_unavailable`,
       p_reference_id: referenceId,
     });
     return new Response(
@@ -243,34 +240,41 @@ Deno.serve(async (req: Request) => {
   const decoder = new TextDecoder();
   let fullOutput = "";
   let blocked = false;
+  let sseBuffer = "";
 
   const stream = new ReadableStream({
     async start(controller) {
-      const reader = geminiRes.body!.getReader();
+      const reader = geminiRes!.body!.getReader();
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split("\n")) {
+          sseBuffer += decoder.decode(value, { stream: true });
+          const lines = sseBuffer.split("\n");
+          sseBuffer = lines.pop() ?? "";
+          for (const rawLine of lines) {
+            const line = rawLine.trim();
             if (!line.startsWith("data:")) continue;
             const jsonStr = line.slice(5).trim();
             if (!jsonStr || jsonStr === "[DONE]") continue;
             try {
               const parsed = JSON.parse(jsonStr);
-              const text =
-                parsed?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-              if (text) {
-                fullOutput += text;
-                // 7. Output moderation
-                if (violatesModeration(fullOutput)) {
-                  blocked = true;
-                  break;
+              const parts = parsed?.candidates?.[0]?.content?.parts ?? [];
+              for (const part of parts) {
+                const text = part?.text ?? "";
+                if (text) {
+                  fullOutput += text;
+                  // 7. Output moderation
+                  if (violatesModeration(fullOutput)) {
+                    blocked = true;
+                    break;
+                  }
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ token: text })}\n\n`),
+                  );
                 }
-                controller.enqueue(
-                  encoder.encode(`data: ${JSON.stringify({ token: text })}\n\n`),
-                );
               }
+              if (blocked) break;
             } catch {
               // Ignore partial SSE frame
             }
