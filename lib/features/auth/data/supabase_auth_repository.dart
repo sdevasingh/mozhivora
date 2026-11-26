@@ -128,7 +128,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await action(repo);
       state = state.copyWith(isLoading: false, infoMessage: successMessage);
     } on sb.AuthException catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.message);
+      final msg = e.message.contains('Failed to decode error response')
+          ? 'Phone OTP or provider is not enabled yet in Supabase Auth. Use Email Sign In / Sign Up, or configure an SMS provider.'
+          : e.message;
+      state = state.copyWith(isLoading: false, errorMessage: msg);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
