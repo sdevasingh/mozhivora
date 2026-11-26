@@ -33,6 +33,8 @@ jobs:
 
       - name: Build Astro Marketing Site
         working-directory: web_marketing
+        env:
+          ASTRO_BASE: /${{ github.event.repository.name }}
         run: |
           npm ci
           npm run build

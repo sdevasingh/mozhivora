@@ -1,5 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
 ---
 <BaseLayout
   title="MOZHIVORA — One workspace. Every task. Smarter with AI."
@@ -19,11 +22,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           Write, chat with PDFs, study with SM-2 flashcards, translate 11 Indian &amp; world languages, and plan your day — in one glassmorphic studio.
         </p>
         <div style="display:flex; flex-wrap:wrap; align-items:center; gap:24px;">
-          <a href="app/" class="split-cta">
+          <a href={`${base}app/`} class="split-cta">
             <span>OPEN WEB APP</span>
             <span>→</span>
           </a>
-          <a href="tools/" style="width:92px; height:92px; border-radius:50%; border:1.5px solid var(--color-ink-teal); display:inline-flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; letter-spacing:0.12em; text-align:center; transform:rotate(-10deg);">
+          <a href={`${base}tools/`} style="width:92px; height:92px; border-radius:50%; border:1.5px solid var(--color-ink-teal); display:inline-flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; letter-spacing:0.12em; text-align:center; transform:rotate(-10deg);">
             EXPLORE<br />TOOLS
           </a>
         </div>
