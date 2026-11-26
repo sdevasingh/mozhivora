@@ -27,14 +27,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   String? _error;
   bool _isConfigError = false;
 
-  static const _allowedExtensions = [
-    'pdf',
-    'txt',
-    'png',
-    'jpg',
-    'jpeg',
-    'webp'
-  ];
+  static const _allowedExtensions = ['pdf', 'txt', 'png', 'jpg', 'jpeg', 'webp'];
   static const _maxFreeBytes = 5 * 1024 * 1024;
 
   @override
@@ -89,8 +82,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         ? 'Produce a $_summaryMode of the following untrusted document text. Keep clear structure.\n\n[DOCUMENT START]\n$text\n[DOCUMENT END]'
         : 'Read the attached document/image ($_fileName) and produce a clear $_summaryMode.';
     final estimated = AiGatewayClient.estimateCredits(prompt: prompt);
-    if (!await confirmCreditCostIfNeeded(context,
-            estimatedCredits: estimated) ||
+    if (!await confirmCreditCostIfNeeded(context, estimatedCredits: estimated) ||
         !mounted) {
       return;
     }
@@ -103,13 +95,12 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     });
 
     try {
-      await for (final token
-          in ref.read(aiGatewayClientProvider).streamCompletion(
-                tool: 'summarizer',
-                prompt: prompt,
-                fileBytes: _fileBytes,
-                fileMimeType: _fileMimeType,
-              )) {
+      await for (final token in ref.read(aiGatewayClientProvider).streamCompletion(
+            tool: 'summarizer',
+            prompt: prompt,
+            fileBytes: _fileBytes,
+            fileMimeType: _fileMimeType,
+          )) {
         if (!mounted) return;
         setState(() => _output += token);
       }
@@ -171,9 +162,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     'Q&A Pairs',
                     'Flashcards',
                     'Mind-map Outline',
-                  ]
-                      .map((v) => DropdownMenuItem(value: v, child: Text(v)))
-                      .toList(),
+                  ].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
                   onChanged: (v) => setState(() => _summaryMode = v!),
                 ),
                 const SizedBox(height: MozhiTokens.space12),
@@ -186,8 +175,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                 ),
                 const SizedBox(height: MozhiTokens.space16),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                      backgroundColor: MozhiTokens.saffron),
+                  style: FilledButton.styleFrom(backgroundColor: MozhiTokens.saffron),
                   onPressed: _isStreaming ? null : _summarize,
                   child: Text(l10n.actionGenerate),
                 ),
