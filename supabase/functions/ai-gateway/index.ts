@@ -58,7 +58,7 @@ function checkRateLimit(key: string, maxPerMinute: number): number | null {
 }
 
 function selectGeminiModel(quality: "fast" | "depth"): string {
-  return quality === "depth" ? "gemini-2.5-pro" : "gemini-2.5-flash";
+  return quality === "depth" ? "gemini-pro-latest" : "gemini-3.8-flash";
 }
 
 function violatesModeration(text: string): boolean {
