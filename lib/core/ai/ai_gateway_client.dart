@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:mozhivora/core/config/app_preferences.dart';
@@ -34,6 +35,8 @@ class AiGatewayClient {
     required String tool,
     required String prompt,
     bool highQuality = false,
+    Uint8List? fileBytes,
+    String? fileMimeType,
   }) async* {
     final client = SupabaseConfig.clientOrNull;
     if (client == null) {
@@ -80,6 +83,11 @@ class AiGatewayClient {
         'creditCost': creditCost,
         if (systemContext != null && systemContext.isNotEmpty)
           'systemContext': systemContext,
+        if (fileBytes != null && fileMimeType != null)
+          'inlineData': {
+            'mimeType': fileMimeType,
+            'data': base64Encode(fileBytes),
+          },
       });
 
     final httpClient = http.Client();

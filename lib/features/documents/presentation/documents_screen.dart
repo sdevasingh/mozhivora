@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   final _textCtrl = TextEditingController();
   String? _fileName;
   int? _fileSizeBytes;
+  Uint8List? _fileBytes;
+  String? _fileMimeType;
   String _summaryMode = 'Short Summary';
   String _output = '';
   bool _isStreaming = false;
@@ -26,12 +29,11 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
 
   static const _allowedExtensions = [
     'pdf',
-    'docx',
     'txt',
-    'pptx',
     'png',
     'jpg',
-    'jpeg'
+    'jpeg',
+    'webp'
   ];
   static const _maxFreeBytes = 5 * 1024 * 1024;
 
@@ -40,6 +42,14 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     _textCtrl.dispose();
     super.dispose();
   }
+
+  String? _mimeForExtension(String? ext) => switch (ext?.toLowerCase()) {
+        'pdf' => 'application/pdf',
+        'png' => 'image/png',
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        _ => null,
+      };
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
@@ -55,22 +65,29 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       });
       return;
     }
+    final ext = file.extension?.toLowerCase();
     setState(() {
       _fileName = file.name;
       _fileSizeBytes = file.size;
       _error = null;
-      if (file.extension?.toLowerCase() == 'txt' && file.bytes != null) {
+      if (ext == 'txt' && file.bytes != null) {
         _textCtrl.text = String.fromCharCodes(file.bytes!);
+        _fileBytes = null;
+        _fileMimeType = null;
+      } else {
+        _fileBytes = file.bytes;
+        _fileMimeType = _mimeForExtension(ext);
       }
     });
   }
 
   Future<void> _summarize() async {
     final text = _textCtrl.text.trim();
-    if (text.isEmpty || _isStreaming) return;
+    if ((text.isEmpty && _fileBytes == null) || _isStreaming) return;
 
-    final prompt =
-        'Produce a $_summaryMode of the following untrusted document text. Keep clear structure.\n\n[DOCUMENT START]\n$text\n[DOCUMENT END]';
+    final prompt = text.isNotEmpty
+        ? 'Produce a $_summaryMode of the following untrusted document text. Keep clear structure.\n\n[DOCUMENT START]\n$text\n[DOCUMENT END]'
+        : 'Read the attached document/image ($_fileName) and produce a clear $_summaryMode.';
     final estimated = AiGatewayClient.estimateCredits(prompt: prompt);
     if (!await confirmCreditCostIfNeeded(context,
             estimatedCredits: estimated) ||
@@ -90,6 +107,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
           in ref.read(aiGatewayClientProvider).streamCompletion(
                 tool: 'summarizer',
                 prompt: prompt,
+                fileBytes: _fileBytes,
+                fileMimeType: _fileMimeType,
               )) {
         if (!mounted) return;
         setState(() => _output += token);

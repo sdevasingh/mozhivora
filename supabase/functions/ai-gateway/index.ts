@@ -28,6 +28,7 @@ interface AiGatewayRequest {
   quality?: "fast" | "depth";
   locale?: string;
   creditCost?: number;
+  inlineData?: { mimeType: string; data: string };
 }
 
 const VALID_TOOLS = new Set<ToolName>([
@@ -215,6 +216,23 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  const userParts: Array<Record<string, unknown>> = [];
+  if (
+    body.inlineData &&
+    typeof body.inlineData.mimeType === "string" &&
+    typeof body.inlineData.data === "string" &&
+    body.inlineData.data.length > 0 &&
+    body.inlineData.data.length <= 7_000_000
+  ) {
+    userParts.push({
+      inlineData: {
+        mimeType: body.inlineData.mimeType,
+        data: body.inlineData.data,
+      },
+    });
+  }
+  userParts.push({ text: body.prompt });
+
   let geminiRes: Response | null = null;
   for (const candidate of candidateModels) {
     model = candidate;
@@ -224,10 +242,10 @@ Deno.serve(async (req: Request) => {
       const res = await fetch(geminiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(15000),
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemInstruction }] },
-          contents: [{ role: "user", parts: [{ text: body.prompt }] }],
+          contents: [{ role: "user", parts: userParts }],
         }),
       });
       if (res.ok && res.body) {
