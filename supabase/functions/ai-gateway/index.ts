@@ -40,8 +40,9 @@ const VALID_TOOLS = new Set<ToolName>([
   "document_chat",
 ]);
 
-// Simple in-memory per-instance rate limiter (complemented by DB usage checks)
+// Simple in-memory per-instance rate limiter & 60s response cache
 const rateMap = new Map<string, { count: number; resetAt: number }>();
+const responseCache = new Map<string, { text: string; expiresAt: number }>();
 
 function checkRateLimit(key: string, maxPerMinute: number): number | null {
   const now = Date.now();
@@ -59,8 +60,8 @@ function checkRateLimit(key: string, maxPerMinute: number): number | null {
 
 function selectGeminiModels(quality: "fast" | "depth"): string[] {
   return quality === "depth"
-    ? ["gemini-3.1-pro-preview", "gemini-pro-latest", "gemini-3-flash-preview"]
-    : ["gemini-3-flash-preview", "gemini-3.8-flash", "gemini-flash-latest"];
+    ? ["gemini-3-flash-preview", "gemini-3.1-pro-preview", "gemini-pro-latest"]
+    : ["gemini-3.1-flash-lite-preview", "gemini-3.5-flash-lite", "gemini-3-flash-preview"];
 }
 
 function violatesModeration(text: string): boolean {
@@ -197,6 +198,23 @@ Deno.serve(async (req: Request) => {
     .filter(Boolean)
     .join("\n");
 
+  // 4b. Return cached fast response if identical prompt was run within 60s
+  const cacheKey = `${body.tool}:${body.locale ?? "en"}:${quality}:${body.prompt.trim()}`;
+  const cached = responseCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now() && !body.systemContext) {
+    const enc = new TextEncoder();
+    const cachedStream = new ReadableStream({
+      start(c) {
+        c.enqueue(enc.encode(`data: ${JSON.stringify({ token: cached.text })}\n\n`));
+        c.enqueue(enc.encode("data: [DONE]\n\n"));
+        c.close();
+      },
+    });
+    return new Response(cachedStream, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+    });
+  }
+
   let geminiRes: Response | null = null;
   for (const candidate of candidateModels) {
     model = candidate;
@@ -206,6 +224,7 @@ Deno.serve(async (req: Request) => {
       const res = await fetch(geminiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(8000),
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemInstruction }] },
           contents: [{ role: "user", parts: [{ text: body.prompt }] }],
@@ -295,11 +314,19 @@ Deno.serve(async (req: Request) => {
             ),
           );
         } else {
+          if (fullOutput.length > 0 && !body.systemContext) {
+            responseCache.set(cacheKey, {
+              text: fullOutput,
+              expiresAt: Date.now() + 60_000,
+            });
+          }
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         }
 
-        // 9. Log metadata only (NEVER log prompts or responses)
-        await adminClient.from("ai_generations").insert({
+        controller.close();
+
+        // 9. Non-blocking metadata-only log (NEVER log prompts or responses)
+        adminClient.from("ai_generations").insert({
           user_id: userId,
           tool_name: body.tool,
           model_used: model,
@@ -308,7 +335,7 @@ Deno.serve(async (req: Request) => {
           latency_ms: Date.now() - startedAt,
           status: blocked ? "blocked" : "completed",
         });
-      } finally {
+      } catch {
         controller.close();
       }
     },
