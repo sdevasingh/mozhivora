@@ -32,15 +32,15 @@ const canonicalURL = new URL(canonicalPath, Astro.site);
   <body>
     <header style="padding: 24px 0;">
       <nav class="container" aria-label="Primary" style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
-        <a href="/" style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; letter-spacing: 0.1em;">
+        <a href="./" style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; letter-spacing: 0.1em;">
           <span style="color: var(--color-spark);">✦</span> MOZHIVORA
         </a>
         <div style="display:flex; align-items:center; gap:28px; font-family:var(--font-mono); font-size:0.8rem; letter-spacing:0.08em; color:var(--color-muted);">
-          <a href="/tools/">TOOLS</a>
-          <a href="/#compare">COMPARE</a>
-          <a href="/#pricing">PRICING</a>
-          <a href="/privacy/">PRIVACY</a>
-          <a href="/#pricing" style="width:42px; height:42px; border-radius:50%; background:#FFFFFF; color:#111114; display:inline-flex; align-items:center; justify-content:center; font-weight:800;">=</a>
+          <a href="tools/">TOOLS</a>
+          <a href="#features">FEATURES</a>
+          <a href="#pricing">PRICING</a>
+          <a href="privacy/">PRIVACY</a>
+          <a href="app/" style="padding:10px 16px; border-radius:4px; background:#FFFFFF; color:#111114; font-weight:800;">OPEN APP →</a>
         </div>
       </nav>
     </header>
@@ -51,9 +51,10 @@ const canonicalURL = new URL(canonicalPath, Astro.site);
       <div class="container" style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px;">
         <div>✦ MOZHIVORA — ZERO TRAINING ON YOUR FILES · GDPR &amp; DPDP 2023</div>
         <div style="display:flex; gap:24px;">
-          <a href="/privacy/">PRIVACY</a>
-          <a href="/tools/">TOOLS</a>
-          <a href="/#pricing">PRICING</a>
+          <a href="privacy/">PRIVACY</a>
+          <a href="tools/">TOOLS</a>
+          <a href="#pricing">PRICING</a>
+          <a href="app/">WEB APP</a>
         </div>
       </div>
     </footer>
