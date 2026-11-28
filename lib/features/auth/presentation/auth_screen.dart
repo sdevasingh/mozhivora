@@ -5,6 +5,8 @@ import 'package:mozhivora/app/theme/tokens.dart';
 import 'package:mozhivora/features/auth/data/supabase_auth_repository.dart';
 import 'package:mozhivora/features/auth/domain/auth_state.dart';
 import 'package:mozhivora/l10n/app_localizations.dart';
+import 'package:mozhivora/shared/widgets/atelier_frame.dart';
+import 'package:mozhivora/shared/widgets/mozhi_status_banner.dart';
 
 enum _AuthTab { signIn, signUp, phoneOtp, magicLink }
 
@@ -16,6 +18,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
+  final _formKey = GlobalKey<FormState>();
   _AuthTab _tab = _AuthTab.signIn;
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -23,6 +26,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _phoneCtrl = TextEditingController();
   final _otpCtrl = TextEditingController();
   bool _otpSent = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -34,10 +38,32 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     super.dispose();
   }
 
+  String? _validateEmail(String? v) {
+    final s = v?.trim() ?? '';
+    if (s.isEmpty || !s.contains('@') || !s.contains('.')) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? v) {
+    if ((v ?? '').length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
+
+  String? _validatePhone(String? v) {
+    final s = v?.trim() ?? '';
+    if (!s.startsWith('+') || s.length < 10) {
+      return 'Include country code (e.g. +91 9876543210)';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final auth = ref.watch(authProvider);
     final notifier = ref.read(authProvider.notifier);
 
@@ -50,39 +76,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     return ListView(
       padding: const EdgeInsets.all(MozhiTokens.space24),
       children: [
-        Text(
-          l10n.authTitle,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        const SizedBox(height: MozhiTokens.space4),
-        Text(
-          l10n.authGuestCarryOver(auth.guestDemosRemaining),
-          style: theme.textTheme.bodySmall,
+        AtelierPageHeader(
+          indexTag: 'Account',
+          title: l10n.authTitle,
+          subtitle: l10n.authGuestCarryOver(auth.guestDemosRemaining),
         ),
         const SizedBox(height: MozhiTokens.space16),
-        if (auth.status == AuthStatus.unconfigured)
-          Card(
-            color: theme.colorScheme.surfaceContainerLow,
-            child: Padding(
-              padding: const EdgeInsets.all(MozhiTokens.space16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline, color: theme.colorScheme.tertiary),
-                  const SizedBox(width: MozhiTokens.space12),
-                  Expanded(
-                    child: Text(
-                      l10n.authUnconfiguredNotice,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        if (auth.status == AuthStatus.unconfigured) ...[
+          MozhiStatusBanner(
+            message: l10n.authUnconfiguredNotice,
+            kind: MozhiBannerKind.warning,
           ),
-        const SizedBox(height: MozhiTokens.space16),
+          const SizedBox(height: MozhiTokens.space16),
+        ],
         SegmentedButton<_AuthTab>(
           segments: [
             ButtonSegment(value: _AuthTab.signIn, label: Text(l10n.authSignIn)),
@@ -96,65 +102,89 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           onSelectionChanged: (s) => setState(() => _tab = s.first),
         ),
         const SizedBox(height: MozhiTokens.space24),
-        if (auth.errorMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: MozhiTokens.space12),
-            child: Text(
-              auth.errorMessage!,
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
+        if (auth.errorMessage != null) ...[
+          MozhiStatusBanner(
+            message: auth.errorMessage!,
+            kind: MozhiBannerKind.error,
           ),
-        if (auth.infoMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: MozhiTokens.space12),
-            child: Text(
-              auth.infoMessage!,
-              style: TextStyle(color: theme.colorScheme.primary),
-            ),
+          const SizedBox(height: MozhiTokens.space12),
+        ],
+        if (auth.infoMessage != null) ...[
+          MozhiStatusBanner(
+            message: auth.infoMessage!,
+            kind: MozhiBannerKind.success,
           ),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(MozhiTokens.space24),
+          const SizedBox(height: MozhiTokens.space12),
+        ],
+        AtelierBox(
+          padding: const EdgeInsets.all(MozhiTokens.space24),
+          child: Form(
+            key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (_tab == _AuthTab.signUp) ...[
-                  TextField(
+                  TextFormField(
                     controller: _nameCtrl,
+                    textInputAction: TextInputAction.next,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Please enter your name'
+                        : null,
                     decoration: InputDecoration(labelText: l10n.authFullName),
                   ),
                   const SizedBox(height: MozhiTokens.space12),
                 ],
                 if (_tab != _AuthTab.phoneOtp) ...[
-                  TextField(
+                  TextFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    validator: _validateEmail,
                     decoration: InputDecoration(labelText: l10n.authEmail),
                   ),
                   const SizedBox(height: MozhiTokens.space12),
                 ],
                 if (_tab == _AuthTab.signIn || _tab == _AuthTab.signUp) ...[
-                  TextField(
+                  TextFormField(
                     controller: _passCtrl,
-                    obscureText: true,
-                    decoration: InputDecoration(labelText: l10n.authPassword),
+                    obscureText: _obscurePassword,
+                    validator: _validatePassword,
+                    decoration: InputDecoration(
+                      labelText: l10n.authPassword,
+                      suffixIcon: IconButton(
+                        tooltip: _obscurePassword
+                            ? 'Show password'
+                            : 'Hide password',
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: MozhiTokens.space16),
                 ],
                 if (_tab == _AuthTab.phoneOtp) ...[
-                  TextField(
+                  TextFormField(
                     controller: _phoneCtrl,
                     keyboardType: TextInputType.phone,
+                    validator: _validatePhone,
                     decoration: InputDecoration(
                       labelText: l10n.authPhoneHint,
-                      hintText: '+91 98765 43210',
+                      hintText: '+91 9876543210',
                     ),
                   ),
                   if (_otpSent) ...[
                     const SizedBox(height: MozhiTokens.space12),
-                    TextField(
+                    TextFormField(
                       controller: _otpCtrl,
                       keyboardType: TextInputType.number,
+                      validator: (v) => (v == null || v.trim().length < 6)
+                          ? 'Enter 6-digit OTP'
+                          : null,
                       decoration: InputDecoration(labelText: l10n.authOtpCode),
                     ),
                   ],
@@ -167,6 +197,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   onPressed: auth.isLoading
                       ? null
                       : () async {
+                          if (!(_formKey.currentState?.validate() ?? false)) {
+                            return;
+                          }
                           switch (_tab) {
                             case _AuthTab.signIn:
                               await notifier.signInWithEmail(

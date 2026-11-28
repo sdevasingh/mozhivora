@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mozhivora/app/theme/tokens.dart';
 
-/// Glassmorphic frosted container with subtle specular border & ambient depth.
-class AtelierBox extends StatelessWidget {
+/// Glassmorphic frosted container with 180ms ease-out hover feedback.
+class AtelierBox extends StatefulWidget {
   const AtelierBox({
     super.key,
     required this.child,
@@ -23,39 +23,54 @@ class AtelierBox extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
+  State<AtelierBox> createState() => _AtelierBoxState();
+}
+
+class _AtelierBoxState extends State<AtelierBox> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final bg = color ??
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final bg = widget.color ??
         (isDark
-            ? Colors.white.withValues(alpha: 0.045)
-            : theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.85));
-    final border = borderColor ??
+            ? Colors.white.withValues(alpha: _hovered ? 0.075 : 0.045)
+            : theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.90));
+    final border = widget.borderColor ??
         (isDark
-            ? Colors.white.withValues(alpha: offsetShadow ? 0.24 : 0.12)
-            : theme.colorScheme.outline);
+            ? Colors.white.withValues(
+                alpha: _hovered ? 0.34 : (widget.offsetShadow ? 0.24 : 0.12),
+              )
+            : (_hovered
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline));
 
     final inner = Material(
       type: MaterialType.transparency,
-      child: onTap != null
+      child: widget.onTap != null
           ? InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: onTap,
-              child: Padding(padding: padding, child: child),
+              borderRadius: BorderRadius.circular(MozhiTokens.radiusCard),
+              onTap: widget.onTap,
+              child: Padding(padding: widget.padding, child: widget.child),
             )
-          : Padding(padding: padding, child: child),
+          : Padding(padding: widget.padding, child: widget.child),
     );
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+    final card = ClipRRect(
+      borderRadius: BorderRadius.circular(MozhiTokens.radiusCard),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
+        child: AnimatedContainer(
+          duration: disableAnimations ? Duration.zero : MozhiTokens.motionHover,
+          curve: MozhiTokens.motionCurve,
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: border, width: offsetShadow ? 1.5 : 1),
-            boxShadow: offsetShadow && isDark
+            borderRadius: BorderRadius.circular(MozhiTokens.radiusCard),
+            border:
+                Border.all(color: border, width: widget.offsetShadow ? 1.5 : 1),
+            boxShadow: widget.offsetShadow && isDark
                 ? [
                     BoxShadow(
                       color: MozhiTokens.inkTeal.withValues(alpha: 0.16),
@@ -69,15 +84,22 @@ class AtelierBox extends StatelessWidget {
         ),
       ),
     );
+
+    if (widget.onTap == null) return card;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: card,
+    );
   }
 }
 
-/// Jomor-style hollow outline / stroke display text.
+/// Hollow outline / stroke display text.
 class OutlinedDisplayText extends StatelessWidget {
   const OutlinedDisplayText(
     this.text, {
     super.key,
-    this.fontSize = 44,
+    this.fontSize = MozhiTokens.text40,
     this.strokeColor,
   });
 
@@ -106,13 +128,13 @@ class OutlinedDisplayText extends StatelessWidget {
   }
 }
 
-/// Jomor-style circular ringed CTA button.
+/// Circular ringed CTA button with screen-reader Semantics.
 class CircularRingCta extends StatelessWidget {
   const CircularRingCta({
     super.key,
     required this.label,
     required this.onTap,
-    this.size = 92,
+    this.size = 88,
   });
 
   final String label;
@@ -122,28 +144,32 @@ class CircularRingCta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(size / 2),
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFF2EB5A8), width: 1.5),
-          color: const Color(0xFF2EB5A8).withValues(alpha: 0.08),
-        ),
-        alignment: Alignment.center,
-        child: Transform.rotate(
-          angle: -0.18,
-          child: Text(
-            label.toUpperCase(),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexMono(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.4,
-              color: theme.colorScheme.onSurface,
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(size / 2),
+        onTap: onTap,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: MozhiTokens.inkTealBright, width: 1.5),
+            color: MozhiTokens.inkTealBright.withValues(alpha: 0.08),
+          ),
+          alignment: Alignment.center,
+          child: Transform.rotate(
+            angle: -0.18,
+            child: Text(
+              label.toUpperCase(),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.4,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
         ),
@@ -191,7 +217,7 @@ class AtelierPageHeader extends StatelessWidget {
                 Text(
                   indexTag.toUpperCase(),
                   style: GoogleFonts.ibmPlexMono(
-                    fontSize: 11,
+                    fontSize: MozhiTokens.text12,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.4,
                     color: MozhiTokens.terracotta,

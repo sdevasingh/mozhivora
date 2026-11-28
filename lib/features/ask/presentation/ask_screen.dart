@@ -4,6 +4,7 @@ import 'package:mozhivora/app/theme/tokens.dart';
 import 'package:mozhivora/core/ai/ai_gateway_client.dart';
 import 'package:mozhivora/l10n/app_localizations.dart';
 import 'package:mozhivora/shared/widgets/ai_output_card.dart';
+import 'package:mozhivora/shared/widgets/atelier_frame.dart';
 import 'package:mozhivora/shared/widgets/credit_estimate_dialog.dart';
 import 'package:mozhivora/shared/widgets/mozhi_empty_state.dart';
 
@@ -118,31 +119,25 @@ class _AskScreenState extends ConsumerState<AskScreen> {
           child: ListView(
             padding: const EdgeInsets.all(MozhiTokens.space24),
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.navAsk,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      if (_turns.length > 2)
-                        IconButton(
-                          tooltip: l10n.askBranchChat,
-                          icon: const Icon(Icons.call_split_outlined),
-                          onPressed: _branchChat,
-                        ),
-                      FilterChip(
-                        label: Text(l10n.aiDepthMode),
-                        selected: _highQuality,
-                        onSelected: (v) => setState(() => _highQuality = v),
+              AtelierPageHeader(
+                indexTag: '01 // Studio Chat',
+                title: l10n.navAsk,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_turns.length > 2)
+                      IconButton(
+                        tooltip: l10n.askBranchChat,
+                        icon: const Icon(Icons.call_split_outlined),
+                        onPressed: _branchChat,
                       ),
-                    ],
-                  ),
-                ],
+                    FilterChip(
+                      label: Text(l10n.aiDepthMode),
+                      selected: _highQuality,
+                      onSelected: (v) => setState(() => _highQuality = v),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: MozhiTokens.space16),
               if (_turns.isEmpty && _error == null)

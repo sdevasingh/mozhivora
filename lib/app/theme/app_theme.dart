@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mozhivora/app/theme/tokens.dart';
 
-/// Builds MOZHIVORA's Material 3 light (Paper) and dark (Charcoal) themes
-/// with script-aware line heights and WCAG 2.2 AA contrast.
+/// Builds MOZHIVORA's Material 3 light (Paper) and dark (Obsidian) themes
+/// using the 12/14/16/20/24/32/40 type scale and WCAG 2.2 AA contrast.
 class MozhiTheme {
   static ThemeData light({
     required Locale locale,
@@ -18,6 +18,8 @@ class MozhiTheme {
         secondary: MozhiTokens.saffron,
         onSecondary: Colors.white,
         tertiary: MozhiTokens.terracotta,
+        error: MozhiTokens.errorLight,
+        onError: Colors.white,
         surface: MozhiTokens.paper,
         onSurface: MozhiTokens.ink,
         surfaceContainerLow: MozhiTokens.sand,
@@ -31,7 +33,6 @@ class MozhiTheme {
     return _applyTypographyAndComponents(
       base: base,
       locale: locale,
-      isDark: false,
       reducedMotion: reducedMotion,
     );
   }
@@ -44,15 +45,17 @@ class MozhiTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF2EB5A8),
+        primary: MozhiTokens.inkTealBright,
         onPrimary: MozhiTokens.charcoal,
         secondary: MozhiTokens.saffron,
         onSecondary: Colors.white,
         tertiary: Color(0xFFE07F5B),
+        error: MozhiTokens.errorDark,
+        onError: MozhiTokens.charcoal,
         surface: MozhiTokens.charcoal,
         onSurface: MozhiTokens.paperDarkText,
         surfaceContainerLow: MozhiTokens.charcoalSurface,
-        surfaceContainerHighest: Color(0xFF2E2A25),
+        surfaceContainerHighest: Color(0xFF28262B),
         onSurfaceVariant: MozhiTokens.stoneDarkText,
         outline: MozhiTokens.charcoalBorder,
       ),
@@ -62,7 +65,6 @@ class MozhiTheme {
     return _applyTypographyAndComponents(
       base: base,
       locale: locale,
-      isDark: true,
       reducedMotion: reducedMotion,
     );
   }
@@ -70,7 +72,6 @@ class MozhiTheme {
   static ThemeData _applyTypographyAndComponents({
     required ThemeData base,
     required Locale locale,
-    required bool isDark,
     required bool reducedMotion,
   }) {
     final onSurface = base.colorScheme.onSurface;
@@ -83,33 +84,44 @@ class MozhiTheme {
       displayColor: onSurface,
     );
 
-    final displayStyle = GoogleFonts.fraunces(
+    final displayStyle = GoogleFonts.spaceGrotesk(
       color: onSurface,
       fontWeight: FontWeight.w700,
-      height: isNonLatin ? 1.35 : 1.2,
+      height: isNonLatin ? 1.35 : 1.15,
     );
 
+    // Strict Type Scale: 12 / 14 / 16 / 20 / 24 / 32 / 40
     final textTheme = sansTextTheme.copyWith(
-      headlineLarge: displayStyle.copyWith(fontSize: 31.25),
-      headlineMedium: displayStyle.copyWith(fontSize: 25),
-      headlineSmall: displayStyle.copyWith(fontSize: 20),
+      displaySmall: displayStyle.copyWith(fontSize: MozhiTokens.text40),
+      headlineLarge: displayStyle.copyWith(fontSize: MozhiTokens.text32),
+      headlineMedium: displayStyle.copyWith(fontSize: MozhiTokens.text24),
+      headlineSmall: displayStyle.copyWith(fontSize: MozhiTokens.text20),
       titleLarge: sansTextTheme.titleLarge?.copyWith(
-        fontSize: 20,
+        fontSize: MozhiTokens.text20,
+        fontWeight: FontWeight.w600,
+        height: bodyHeight,
+      ),
+      titleMedium: sansTextTheme.titleMedium?.copyWith(
+        fontSize: MozhiTokens.text16,
         fontWeight: FontWeight.w600,
         height: bodyHeight,
       ),
       bodyLarge: sansTextTheme.bodyLarge?.copyWith(
-        fontSize: 16,
+        fontSize: MozhiTokens.text16,
         height: bodyHeight,
       ),
       bodyMedium: sansTextTheme.bodyMedium?.copyWith(
-        fontSize: 14,
+        fontSize: MozhiTokens.text14,
         height: bodyHeight,
       ),
       bodySmall: sansTextTheme.bodySmall?.copyWith(
-        fontSize: 12.8,
+        fontSize: MozhiTokens.text12,
         color: onSurfaceVariant,
         height: bodyHeight,
+      ),
+      labelSmall: sansTextTheme.labelSmall?.copyWith(
+        fontSize: MozhiTokens.text12,
+        color: onSurfaceVariant,
       ),
     );
 
@@ -131,8 +143,8 @@ class MozhiTheme {
         elevation: 0,
         color: base.colorScheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-          side: BorderSide(color: borderColor, width: 1.2),
+          borderRadius: BorderRadius.circular(MozhiTokens.radiusCard),
+          side: BorderSide(color: borderColor, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -140,32 +152,36 @@ class MozhiTheme {
         filled: true,
         fillColor: base.colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: borderColor, width: 1.2),
+          borderRadius: BorderRadius.circular(MozhiTokens.radiusInput),
+          borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: borderColor, width: 1.2),
+          borderRadius: BorderRadius.circular(MozhiTokens.radiusInput),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(MozhiTokens.radiusInput),
           borderSide: BorderSide(color: base.colorScheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(MozhiTokens.radiusInput),
+          borderSide: BorderSide(color: base.colorScheme.error, width: 1.5),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(MozhiTokens.radiusInput),
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(48, 48),
-          side: BorderSide(color: borderColor, width: 1.2),
+          side: BorderSide(color: borderColor),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(MozhiTokens.radiusInput),
           ),
         ),
       ),
