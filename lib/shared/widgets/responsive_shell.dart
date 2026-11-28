@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mozhivora/app/theme/tokens.dart';
 import 'package:mozhivora/core/config/app_preferences.dart';
 import 'package:mozhivora/l10n/app_localizations.dart';
+import 'package:mozhivora/shared/widgets/animated_background.dart';
 import 'package:mozhivora/shared/widgets/command_bar_sheet.dart';
 
 class NavDestination {
@@ -267,47 +268,7 @@ class _ResponsiveShellState extends ConsumerState<ResponsiveShell> {
     return Scaffold(
       body: Stack(
         children: [
-          // T.RICKS-style ambient radial glow orbs
-          if (isDark) ...[
-            Positioned(
-              top: -120,
-              right: -80,
-              child: IgnorePointer(
-                child: Container(
-                  width: 420,
-                  height: 420,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        MozhiTokens.inkTeal.withValues(alpha: 0.28),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -140,
-              left: -100,
-              child: IgnorePointer(
-                child: Container(
-                  width: 380,
-                  height: 380,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        MozhiTokens.saffron.withValues(alpha: 0.16),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          AnimatedBackground(reducedMotion: prefs.reducedMotion),
           Column(
             children: [
               // Minimalist Jomor Top Navigation Bar (no heavy sidebar!)
@@ -465,6 +426,8 @@ class _ResponsiveShellState extends ConsumerState<ResponsiveShell> {
     final mobileRoutes = ['/', '/templates', '/ask', '/workspace', '/settings'];
     final currentIdx = mobileRoutes.indexOf(widget.currentRoute);
 
+    final prefs = ref.watch(appPreferencesProvider);
+
     return Scaffold(
       appBar: AppBar(
         titleSpacing: MozhiTokens.space16,
@@ -489,7 +452,12 @@ class _ResponsiveShellState extends ConsumerState<ResponsiveShell> {
           ),
         ],
       ),
-      body: widget.child,
+      body: Stack(
+        children: [
+          AnimatedBackground(reducedMotion: prefs.reducedMotion),
+          widget.child,
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         tooltip: l10n.navAsk,
         backgroundColor: MozhiTokens.saffron,

@@ -14,12 +14,16 @@ class AiOutputCard extends StatelessWidget {
     required this.isStreaming,
     this.errorMessage,
     this.isConfigError = false,
+    this.onRetry,
+    this.textDirection,
   });
 
   final String output;
   final bool isStreaming;
   final String? errorMessage;
   final bool isConfigError;
+  final VoidCallback? onRetry;
+  final TextDirection? textDirection;
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +34,10 @@ class AiOutputCard extends StatelessWidget {
       return MozhiStatusBanner(
         message: errorMessage!,
         kind: MozhiBannerKind.error,
-        actionLabel: isConfigError ? l10n.authSignIn : null,
-        onAction: isConfigError ? () => context.go('/auth') : null,
+        actionLabel: isConfigError
+            ? l10n.authSignIn
+            : (onRetry != null ? 'Retry' : null),
+        onAction: isConfigError ? () => context.go('/auth') : onRetry,
       );
     }
 
@@ -85,7 +91,10 @@ class AiOutputCard extends StatelessWidget {
           if (isStreaming && output.isEmpty)
             const MozhiSkeleton(lines: 3)
           else
-            SelectableText(output, style: theme.textTheme.bodyLarge),
+            Directionality(
+              textDirection: textDirection ?? Directionality.of(context),
+              child: SelectableText(output, style: theme.textTheme.bodyLarge),
+            ),
         ],
       ),
     );

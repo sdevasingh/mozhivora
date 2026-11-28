@@ -213,4 +213,31 @@ void main() {
     card.review(5);
     expect(card.intervalDays, greaterThan(3));
   });
+
+  testWidgets('Writer validates empty topic & renders unified dropdowns',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({'onboardingCompleted': true});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: const MozhivoraApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Tools'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Chapter Revision Notes'));
+    await tester.pumpAndSettle();
+
+    // Clear prefilled text and submit to test inline validation
+    await tester.enterText(find.byType(TextFormField).first, '');
+    await tester.tap(find.text('Generate'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Please enter a topic or draft prompt'), findsOneWidget);
+    expect(find.text('Est. 1 credit'), findsOneWidget);
+  });
 }

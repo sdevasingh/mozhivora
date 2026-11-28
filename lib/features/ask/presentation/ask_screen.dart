@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mozhivora/app/theme/tokens.dart';
 import 'package:mozhivora/core/ai/ai_gateway_client.dart';
@@ -25,11 +27,14 @@ class AskScreen extends ConsumerStatefulWidget {
 
 class _AskScreenState extends ConsumerState<AskScreen> {
   final _promptCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
   final List<_ChatTurn> _turns = [];
+  StreamSubscription<String>? _streamSub;
   bool _isStreaming = false;
   bool _highQuality = false;
   String? _error;
   bool _isConfigError = false;
+  String? _lastPrompt;
 
   @override
   void initState() {
@@ -41,13 +46,34 @@ class _AskScreenState extends ConsumerState<AskScreen> {
 
   @override
   void dispose() {
+    _streamSub?.cancel();
     _promptCtrl.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: MozhiTokens.motionHover,
+          curve: MozhiTokens.motionCurve,
+        );
+      }
+    });
   }
 
   Future<void> _send([String? overridePrompt]) async {
     final prompt = (overridePrompt ?? _promptCtrl.text).trim();
-    if (prompt.isEmpty || _isStreaming) return;
+    if (_isStreaming) return;
+    if (prompt.isEmpty) {
+      setState(() {
+        _error = 'Please type a question before sending.';
+        _isConfigError = false;
+      });
+      return;
+    }
 
     final estimated = AiGatewayClient.estimateCredits(
       prompt: prompt,
@@ -59,6 +85,7 @@ class _AskScreenState extends ConsumerState<AskScreen> {
     );
     if (!ok || !mounted) return;
 
+    _lastPrompt = prompt;
     setState(() {
       if (overridePrompt == null) _promptCtrl.clear();
       _turns.add(_ChatTurn(role: 'user', text: prompt));
@@ -67,33 +94,41 @@ class _AskScreenState extends ConsumerState<AskScreen> {
       _error = null;
       _isConfigError = false;
     });
+    _scrollToBottom();
 
-    try {
-      final stream = ref.read(aiGatewayClientProvider).streamCompletion(
-            tool: 'ask',
-            prompt: prompt,
-            highQuality: _highQuality,
-          );
-      await for (final token in stream) {
+    final stream = ref.read(aiGatewayClientProvider).streamCompletion(
+          tool: 'ask',
+          prompt: prompt,
+          highQuality: _highQuality,
+        );
+
+    _streamSub = stream.listen(
+      (token) {
+        if (!mounted) return;
+        setState(() => _turns.last.text += token);
+        _scrollToBottom();
+      },
+      onError: (Object err) {
         if (!mounted) return;
         setState(() {
-          _turns.last.text += token;
+          _error = err.toString();
+          _isConfigError = err is AiGatewayException && err.isConfigError;
+          if (_turns.isNotEmpty && _turns.last.text.isEmpty) {
+            _turns.removeLast();
+          }
+          _isStreaming = false;
         });
-      }
-    } on AiGatewayException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _isConfigError = e.isConfigError;
-        if (_turns.isNotEmpty && _turns.last.text.isEmpty) {
-          _turns.removeLast();
-        }
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isStreaming = false);
-      }
-    }
+      },
+      onDone: () {
+        if (mounted) setState(() => _isStreaming = false);
+      },
+      cancelOnError: true,
+    );
+  }
+
+  void _stopStreaming() {
+    _streamSub?.cancel();
+    setState(() => _isStreaming = false);
   }
 
   void _branchChat() {
@@ -117,13 +152,15 @@ class _AskScreenState extends ConsumerState<AskScreen> {
       children: [
         Expanded(
           child: ListView(
+            controller: _scrollCtrl,
             padding: const EdgeInsets.all(MozhiTokens.space24),
             children: [
               AtelierPageHeader(
                 indexTag: '01 // Studio Chat',
                 title: l10n.navAsk,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
+                trailing: Wrap(
+                  spacing: MozhiTokens.space8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     if (_turns.length > 2)
                       IconButton(
@@ -134,8 +171,11 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                     FilterChip(
                       label: Text(l10n.aiDepthMode),
                       selected: _highQuality,
-                      onSelected: (v) => setState(() => _highQuality = v),
+                      onSelected: _isStreaming
+                          ? null
+                          : (v) => setState(() => _highQuality = v),
                     ),
+                    CreditCostPill(credits: estimated),
                   ],
                 ),
               ),
@@ -149,7 +189,7 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                     'Explain photosynthesis simply in Hindi and English',
                     'Break down my weekly goals into 3 daily tasks',
                   ],
-                  onPromptTap: (p) => _promptCtrl.text = p,
+                  onPromptTap: (p) => setState(() => _promptCtrl.text = p),
                 )
               else
                 ..._turns.map((t) {
@@ -164,7 +204,7 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                                   const EdgeInsets.all(MozhiTokens.space12),
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.12),
+                                    .withValues(alpha: 0.14),
                                 borderRadius: BorderRadius.circular(
                                     MozhiTokens.radiusCard),
                               ),
@@ -183,6 +223,8 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                   isStreaming: false,
                   errorMessage: _error,
                   isConfigError: _isConfigError,
+                  onRetry:
+                      _lastPrompt != null ? () => _send(_lastPrompt) : null,
                 ),
             ],
           ),
@@ -190,35 +232,50 @@ class _AskScreenState extends ConsumerState<AskScreen> {
         const Divider(height: 1),
         Padding(
           padding: const EdgeInsets.all(MozhiTokens.space16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _promptCtrl,
-                      minLines: 1,
-                      maxLines: 4,
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        hintText: l10n.commandBarHint,
-                      ),
+              Expanded(
+                child: Focus(
+                  onKeyEvent: (_, event) {
+                    if (event is KeyDownEvent &&
+                        event.logicalKey == LogicalKeyboardKey.enter &&
+                        !HardwareKeyboard.instance.isShiftPressed) {
+                      _send();
+                      return KeyEventResult.handled;
+                    }
+                    return KeyEventResult.ignored;
+                  },
+                  child: TextField(
+                    controller: _promptCtrl,
+                    minLines: 1,
+                    maxLines: 4,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: l10n.askSubtitle,
                     ),
                   ),
-                  const SizedBox(width: MozhiTokens.space12),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: MozhiTokens.saffron,
-                    ),
-                    onPressed: _isStreaming ? null : () => _send(),
-                    icon: const Icon(Icons.send),
-                    label: Text(l10n.actionSend),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: MozhiTokens.space8),
-              CreditCostPill(credits: estimated),
+              const SizedBox(width: MozhiTokens.space12),
+              if (_isStreaming)
+                OutlinedButton.icon(
+                  onPressed: _stopStreaming,
+                  icon: const Icon(Icons.stop_circle_outlined),
+                  label: const Text('Stop'),
+                )
+              else
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: MozhiTokens.saffron,
+                    foregroundColor: MozhiTokens.charcoal,
+                  ),
+                  onPressed: () => _send(),
+                  icon: const Icon(Icons.send),
+                  label: Text(
+                    l10n.actionSend,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
             ],
           ),
         ),

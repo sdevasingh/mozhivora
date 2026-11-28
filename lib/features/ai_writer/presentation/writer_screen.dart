@@ -5,7 +5,9 @@ import 'package:mozhivora/core/ai/ai_gateway_client.dart';
 import 'package:mozhivora/features/ai_writer/data/brand_voice_provider.dart';
 import 'package:mozhivora/l10n/app_localizations.dart';
 import 'package:mozhivora/shared/widgets/ai_output_card.dart';
+import 'package:mozhivora/shared/widgets/atelier_frame.dart';
 import 'package:mozhivora/shared/widgets/credit_estimate_dialog.dart';
+import 'package:mozhivora/shared/widgets/mozhi_dropdown.dart';
 
 class WriterScreen extends ConsumerStatefulWidget {
   const WriterScreen({super.key, this.initialTopic});
@@ -17,6 +19,7 @@ class WriterScreen extends ConsumerStatefulWidget {
 }
 
 class _WriterScreenState extends ConsumerState<WriterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _topicCtrl = TextEditingController();
   String _docType = 'Article';
   String _tone = 'Clear & warm';
@@ -26,6 +29,7 @@ class _WriterScreenState extends ConsumerState<WriterScreen> {
   bool _isStreaming = false;
   String? _error;
   bool _isConfigError = false;
+  String? _lastAction;
 
   @override
   void initState() {
@@ -42,6 +46,7 @@ class _WriterScreenState extends ConsumerState<WriterScreen> {
   }
 
   Future<void> _showCreateBrandVoiceDialog() async {
+    final dialogFormKey = GlobalKey<FormState>();
     final nameCtrl = TextEditingController();
     final toneCtrl = TextEditingController();
     final sample1Ctrl = TextEditingController();
@@ -53,38 +58,45 @@ class _WriterScreenState extends ConsumerState<WriterScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('New Brand Voice Kit'),
         content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Kit name (e.g. Newsletter)'),
-              ),
-              const SizedBox(height: MozhiTokens.space8),
-              TextField(
-                controller: toneCtrl,
-                decoration: const InputDecoration(labelText: 'Tone summary'),
-              ),
-              const SizedBox(height: MozhiTokens.space8),
-              TextField(
-                controller: sample1Ctrl,
-                decoration:
-                    const InputDecoration(labelText: 'Writing sample 1'),
-              ),
-              const SizedBox(height: MozhiTokens.space8),
-              TextField(
-                controller: sample2Ctrl,
-                decoration:
-                    const InputDecoration(labelText: 'Writing sample 2'),
-              ),
-              const SizedBox(height: MozhiTokens.space8),
-              TextField(
-                controller: sample3Ctrl,
-                decoration:
-                    const InputDecoration(labelText: 'Writing sample 3'),
-              ),
-            ],
+          child: Form(
+            key: dialogFormKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameCtrl,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Kit name is required'
+                      : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Kit name (e.g. Newsletter)',
+                  ),
+                ),
+                const SizedBox(height: MozhiTokens.space8),
+                TextFormField(
+                  controller: toneCtrl,
+                  decoration: const InputDecoration(labelText: 'Tone summary'),
+                ),
+                const SizedBox(height: MozhiTokens.space8),
+                TextFormField(
+                  controller: sample1Ctrl,
+                  decoration:
+                      const InputDecoration(labelText: 'Writing sample 1'),
+                ),
+                const SizedBox(height: MozhiTokens.space8),
+                TextFormField(
+                  controller: sample2Ctrl,
+                  decoration:
+                      const InputDecoration(labelText: 'Writing sample 2'),
+                ),
+                const SizedBox(height: MozhiTokens.space8),
+                TextFormField(
+                  controller: sample3Ctrl,
+                  decoration:
+                      const InputDecoration(labelText: 'Writing sample 3'),
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -93,26 +105,44 @@ class _WriterScreenState extends ConsumerState<WriterScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
+            onPressed: () {
+              if (dialogFormKey.currentState?.validate() ?? false) {
+                Navigator.of(ctx).pop(true);
+              }
+            },
             child: const Text('Save Kit'),
           ),
         ],
       ),
     );
 
-    if (created == true && nameCtrl.text.trim().isNotEmpty) {
+    final name = nameCtrl.text;
+    final tone = toneCtrl.text;
+    final samples = [sample1Ctrl.text, sample2Ctrl.text, sample3Ctrl.text];
+    nameCtrl.dispose();
+    toneCtrl.dispose();
+    sample1Ctrl.dispose();
+    sample2Ctrl.dispose();
+    sample3Ctrl.dispose();
+
+    if (created == true && name.trim().isNotEmpty) {
       await ref.read(brandVoiceProvider.notifier).addKit(
-        name: nameCtrl.text,
-        toneSummary: toneCtrl.text,
-        samples: [sample1Ctrl.text, sample2Ctrl.text, sample3Ctrl.text],
-      );
+            name: name,
+            toneSummary: tone,
+            samples: samples,
+          );
     }
   }
 
   Future<void> _generate([String? inlineAction]) async {
+    if (_isStreaming) return;
+    if (inlineAction == null && !(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
     final baseTopic = _topicCtrl.text.trim();
     if (baseTopic.isEmpty && inlineAction == null) return;
 
+    _lastAction = inlineAction;
     final kits = ref.read(brandVoiceProvider);
     final activeKit =
         kits.where((k) => k.id == _selectedBrandVoiceId).firstOrNull;
@@ -161,110 +191,140 @@ class _WriterScreenState extends ConsumerState<WriterScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final kits = ref.watch(brandVoiceProvider);
     final estimated = AiGatewayClient.estimateCredits(prompt: _topicCtrl.text);
 
     return ListView(
       padding: const EdgeInsets.all(MozhiTokens.space24),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              l10n.navWriter,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            CreditCostPill(credits: estimated),
-          ],
+        AtelierPageHeader(
+          indexTag: '02 // Studio Writer',
+          title: l10n.navWriter,
+          trailing: CreditCostPill(credits: estimated),
         ),
         const SizedBox(height: MozhiTokens.space16),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(MozhiTokens.space16),
+        AtelierBox(
+          child: Form(
+            key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
+                TextFormField(
                   controller: _topicCtrl,
                   minLines: 2,
                   maxLines: 4,
                   onChanged: (_) => setState(() {}),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Please enter a topic or draft prompt'
+                      : null,
                   decoration: InputDecoration(labelText: l10n.writerTopicLabel),
                 ),
                 const SizedBox(height: MozhiTokens.space12),
-                Wrap(
-                  spacing: MozhiTokens.space12,
-                  runSpacing: MozhiTokens.space12,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    DropdownButton<String>(
-                      value: _docType,
-                      items: const [
-                        'Article',
-                        'Blog Post',
-                        'Social Post',
-                        'Proposal'
-                      ]
-                          .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)))
-                          .toList(),
-                      onChanged: (v) => setState(() => _docType = v!),
-                    ),
-                    DropdownButton<String>(
-                      value: _tone,
-                      items: const [
-                        'Clear & warm',
-                        'Formal',
-                        'Friendly',
-                        'Persuasive'
-                      ]
-                          .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)))
-                          .toList(),
-                      onChanged: (v) => setState(() => _tone = v!),
-                    ),
-                    DropdownButton<String>(
-                      value: _length,
-                      items: const ['Short', 'Medium', 'Detailed']
-                          .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)))
-                          .toList(),
-                      onChanged: (v) => setState(() => _length = v!),
-                    ),
-                    DropdownButton<String?>(
-                      value: _selectedBrandVoiceId,
-                      hint: const Text('Brand Voice'),
-                      items: [
-                        const DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text('Default Voice'),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final itemWidth = constraints.maxWidth >= 600
+                        ? (constraints.maxWidth - 36) / 4
+                        : (constraints.maxWidth - 12) / 2;
+                    return Wrap(
+                      spacing: MozhiTokens.space12,
+                      runSpacing: MozhiTokens.space12,
+                      children: [
+                        SizedBox(
+                          width: itemWidth,
+                          child: MozhiDropdown<String>(
+                            label: 'Type',
+                            value: _docType,
+                            enabled: !_isStreaming,
+                            items: const [
+                              'Article',
+                              'Blog Post',
+                              'Social Post',
+                              'Proposal'
+                            ]
+                                .map((v) =>
+                                    DropdownMenuItem(value: v, child: Text(v)))
+                                .toList(),
+                            onChanged: (v) => setState(() => _docType = v!),
+                          ),
                         ),
-                        ...kits.map(
-                          (k) => DropdownMenuItem<String?>(
-                            value: k.id,
-                            child: Text('Voice: ${k.name}'),
+                        SizedBox(
+                          width: itemWidth,
+                          child: MozhiDropdown<String>(
+                            label: 'Tone',
+                            value: _tone,
+                            enabled: !_isStreaming,
+                            items: const [
+                              'Clear & warm',
+                              'Formal',
+                              'Friendly',
+                              'Persuasive'
+                            ]
+                                .map((v) =>
+                                    DropdownMenuItem(value: v, child: Text(v)))
+                                .toList(),
+                            onChanged: (v) => setState(() => _tone = v!),
+                          ),
+                        ),
+                        SizedBox(
+                          width: itemWidth,
+                          child: MozhiDropdown<String>(
+                            label: 'Length',
+                            value: _length,
+                            enabled: !_isStreaming,
+                            items: const ['Short', 'Medium', 'Detailed']
+                                .map((v) =>
+                                    DropdownMenuItem(value: v, child: Text(v)))
+                                .toList(),
+                            onChanged: (v) => setState(() => _length = v!),
+                          ),
+                        ),
+                        SizedBox(
+                          width: itemWidth,
+                          child: MozhiDropdown<String?>(
+                            label: 'Voice',
+                            value: _selectedBrandVoiceId,
+                            enabled: !_isStreaming,
+                            items: [
+                              const DropdownMenuItem<String?>(
+                                value: null,
+                                child: Text('Default Voice'),
+                              ),
+                              ...kits.map(
+                                (k) => DropdownMenuItem<String?>(
+                                  value: k.id,
+                                  child: Text(k.name),
+                                ),
+                              ),
+                            ],
+                            onChanged: (v) =>
+                                setState(() => _selectedBrandVoiceId = v),
                           ),
                         ),
                       ],
-                      onChanged: (v) =>
-                          setState(() => _selectedBrandVoiceId = v),
-                    ),
-                    TextButton.icon(
-                      onPressed: _showCreateBrandVoiceDialog,
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('New Brand Voice'),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-                const SizedBox(height: MozhiTokens.space16),
+                const SizedBox(height: MozhiTokens.space8),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    onPressed:
+                        _isStreaming ? null : _showCreateBrandVoiceDialog,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('New Brand Voice'),
+                  ),
+                ),
+                const SizedBox(height: MozhiTokens.space12),
                 FilledButton(
                   style: FilledButton.styleFrom(
-                      backgroundColor: MozhiTokens.saffron),
+                    backgroundColor: MozhiTokens.saffron,
+                    foregroundColor: MozhiTokens.charcoal,
+                  ),
                   onPressed: _isStreaming ? null : () => _generate(),
-                  child: Text(l10n.actionGenerate),
+                  child: Text(
+                    _isStreaming ? l10n.aiStreamingLabel : l10n.actionGenerate,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ],
             ),
@@ -274,6 +334,7 @@ class _WriterScreenState extends ConsumerState<WriterScreen> {
           const SizedBox(height: MozhiTokens.space12),
           Wrap(
             spacing: MozhiTokens.space8,
+            runSpacing: MozhiTokens.space8,
             children: ['Rewrite', 'Shorten', 'Expand', 'Fix grammar']
                 .map(
                   (act) => ActionChip(
@@ -290,6 +351,7 @@ class _WriterScreenState extends ConsumerState<WriterScreen> {
           isStreaming: _isStreaming,
           errorMessage: _error,
           isConfigError: _isConfigError,
+          onRetry: () => _generate(_lastAction),
         ),
       ],
     );
